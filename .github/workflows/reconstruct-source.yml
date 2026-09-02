@@ -1,0 +1,60 @@
+name: Reconstruct Source
+
+on:
+  push:
+    paths:
+      - ".github/workflows/reconstruct-source.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  reconstruct:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Reconstruct source
+        shell: python
+        run: |
+          import base64
+          import lzma
+          import pathlib
+
+          root = pathlib.Path(".")
+          parts = sorted((root / ".source_parts").glob("part*.txt"))
+          if not parts:
+              raise SystemExit("No source payload parts found")
+
+          payload = "".join(p.read_text(encoding="utf-8").strip() for p in parts)
+          if len(payload) != 90636:
+              raise SystemExit(f"Unexpected payload length: {len(payload)}")
+
+          source = lzma.decompress(base64.b64decode(payload))
+          if len(source) < 20000:
+              raise SystemExit("Reconstructed source is too small")
+
+          text = source.decode("utf-8")
+          compile(text, "webapp-PrintBot.py", "exec")
+          if 'APP_VERSION = "4.0.3-advanced"' not in text:
+              raise SystemExit("APP_VERSION mismatch")
+          if "PrintBot" not in text or "def main(" not in text:
+              raise SystemExit("Source integrity markers missing")
+
+          (root / "webapp-PrintBot.py").write_bytes(source)
+          print("Reconstructed bytes:", len(source))
+
+      - name: Remove staging payload
+        shell: bash
+        run: rm -rf .source_parts
+
+      - name: Commit complete source
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add webapp-PrintBot.py .source_parts
+          git commit -m "Add complete Web Print App source"
+          git push
