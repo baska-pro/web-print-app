@@ -1,0 +1,36 @@
+# Runtime dependencies.
+# The main script can auto-install missing packages; this file is provided for
+# reproducible/manual installation and CI.
+
+python-dotenv<1.1; python_version < "3.9"
+python-dotenv; python_version >= "3.9"
+
+fastapi<0.116; python_version < "3.9"
+fastapi; python_version >= "3.9"
+
+uvicorn[standard]<0.31; python_version < "3.9"
+uvicorn[standard]; python_version >= "3.9"
+
+starlette<0.42; python_version < "3.9"
+starlette; python_version >= "3.9"
+
+itsdangerous
+python-multipart
+
+pydantic<2.11; python_version < "3.9"
+pydantic; python_version >= "3.9"
+
+openpyxl<3.2; python_version < "3.9"
+openpyxl; python_version >= "3.9"
+
+Pillow<11; python_version < "3.9"
+Pillow; python_version >= "3.9"
+
+PyMuPDF<1.25; python_version < "3.9"
+PyMuPDF; python_version >= "3.9"
+
+python-docx<1.2; python_version < "3.9"
+python-docx; python_version >= "3.9"
+
+pywin32==306; sys_platform == "win32" and python_version < "3.9"
+pywin32; sys_platform == "win32" and python_version >= "3.9"
