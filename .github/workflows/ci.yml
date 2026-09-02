@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: "3.8"
+          - os: ubuntu-latest
+            python: "3.12"
+          - os: windows-latest
+            python: "3.12"
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Syntax check
+        run: python -m py_compile webapp-PrintBot.py
+
+      - name: Validate version
+        shell: python
+        run: |
+          import pathlib, re
+          source = pathlib.Path("webapp-PrintBot.py").read_text(encoding="utf-8")
+          match = re.search(r'^APP_VERSION\s*=\s*["\']([^"\']+)', source, re.M)
+          if not match:
+              raise SystemExit("APP_VERSION not found")
+          expected = pathlib.Path("VERSION").read_text(encoding="utf-8").strip()
+          if match.group(1) != expected:
+              raise SystemExit(f"VERSION mismatch: script={match.group(1)} file={expected}")
+          print("Version OK:", expected)
+
+      - name: Repository hygiene
+        shell: python
+        run: |
+          import pathlib
+          forbidden = {".env", "printbot.db", "webapp_secret.key", "api_token.key"}
+          bad = [str(p) for p in pathlib.Path(".").rglob("*") if p.is_file() and p.name in forbidden]
+          if bad:
+              raise SystemExit("Runtime secret/data files committed: " + ", ".join(bad))
+          print("Repository hygiene OK")
