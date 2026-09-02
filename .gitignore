@@ -1,0 +1,38 @@
+# Secrets / runtime configuration
+.env
+.env.*
+!.env.example
+*.key
+
+# Runtime data
+data/
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+
+# Update / backup temp files
+*.update
+*.rollback
+*.bak
+*.tmp
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
